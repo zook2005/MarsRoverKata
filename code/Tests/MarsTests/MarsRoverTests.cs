@@ -31,6 +31,26 @@ namespace MarsTests
             Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
             Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);
         }
+
+        [Test]
+        public void MoveMultipleSteps_fr_11()
+        {
+            //Arrange
+            Point startingPoint = new Point(0, 0);
+            MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
+            MarsRover rover = new MarsRover(startingPoint, startingDirection);
+            var moves = new[] { 'f', 'r' };
+
+            Point expectedCoordinates = new Point(1, 1);
+            MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.East;
+
+            //Act
+            var roverAtNewCoordinates = rover.Move(moves);
+
+            //Assert
+            Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
+            Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);
+        }
     }
 
     internal class MarsRover
