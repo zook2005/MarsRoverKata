@@ -70,6 +70,31 @@ namespace MarsTests
             //Assert
             Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
         }
+
+        [Test]
+        public void RespondToObstacle()
+        {
+            //Arrange
+            Point startingPoint = new Point(0, 0);
+            MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
+            MarsRover rover = new MarsRover(startingPoint, startingDirection);
+            var moves = new[] { 'f' };
+
+            Point expectedCoordinates = startingPoint;
+            MarsRover.CardinalDirection expectedStartingDirection = startingDirection;
+
+            var obstacleCoords = new Point(0, 1);
+            rover.obstacles = new List<Point>() { obstacleCoords };
+
+            //Act
+            var roverAtNewCoordinates = rover.Move(moves); //implement this new test!
+
+            //Assert
+            Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates); //rover did not move
+            Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);//rover did not move
+            Assert.AreEqual("obstacle detected", roverAtNewCoordinates.Status.RoverStatus);
+            Assert.AreEqual(obstacleCoords, roverAtNewCoordinates.Status.obstacleCoordinates);
+        }
     }
 
     internal class MarsRover
