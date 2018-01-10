@@ -33,15 +33,15 @@ namespace MarsTests
         }
 
         [Test]
-        public void MoveMultipleSteps_fr_11()
+        public void TurnRight_00N_00E()
         {
             //Arrange
             Point startingPoint = new Point(0, 0);
             MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
             MarsRover rover = new MarsRover(startingPoint, startingDirection);
-            var moves = new[] { 'f', 'r' };
+            var moves = new[] { 'r' };
 
-            Point expectedCoordinates = new Point(1, 1);
+            Point expectedCoordinates = new Point(0, 0);
             MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.East;
 
             //Act
@@ -95,6 +95,7 @@ namespace MarsTests
             Assert.AreEqual("obstacle detected", roverAtNewCoordinates.Status.RoverStatus);
             Assert.AreEqual(obstacleCoords, roverAtNewCoordinates.Status.obstacleCoordinates);
         }
+
     }
 
     internal class MarsRover
@@ -145,7 +146,6 @@ namespace MarsTests
                 direction = newState.direction;
                 coordinates = newState.coordinates;
             }
-
             return new MarsRover(coordinates, direction);
         }
 
