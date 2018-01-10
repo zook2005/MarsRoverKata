@@ -95,6 +95,8 @@ namespace MarsTests
             {
                 case 'f':
                     return new MoveForwardCommand();
+                case 'r':
+                    return new MoveRightCommand();
             }
             return null;
         }
@@ -118,6 +120,26 @@ namespace MarsTests
             { MarsRover.CardinalDirection.South,    new Vector(0, -1)   },
             { MarsRover.CardinalDirection.West,     new Vector(-1, 0)   }
         });
+    }
+
+    internal class MoveRightCommand : BaseCommand
+    {
+        protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
+        {
+            switch (direction)
+            {
+                case MarsRover.CardinalDirection.North:
+                    return MarsRover.CardinalDirection.East;
+                case MarsRover.CardinalDirection.East:
+                    return MarsRover.CardinalDirection.South;
+                case MarsRover.CardinalDirection.South:
+                    return MarsRover.CardinalDirection.West;
+                case MarsRover.CardinalDirection.West:
+                    return MarsRover.CardinalDirection.North;
+                default:
+                    throw new ArgumentOutOfRangeException($"enum member '{direction}' does not have a corresponding switch case");
+            }
+        }
     }
 
     internal class MoveForwardCommand : BaseCommand
