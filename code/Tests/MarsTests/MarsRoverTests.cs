@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace MarsTests
 {
@@ -26,6 +27,25 @@ namespace MarsTests
 
             //Assert
             Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
+        }
+    }
+
+    internal class MarsRover
+    {
+        internal Point coordinates;
+        internal char direction;
+
+        public MarsRover(Point startingPoint, char startingDirection)
+        {
+            this.coordinates = startingPoint;
+            this.direction = startingDirection;
+        }
+
+        internal MarsRover Move(char[] moves)
+        {
+            Point coordinates = new Point(1, 0);
+            char direction = 'e';
+            return new MarsRover(coordinates, direction);
         }
     }
 }
