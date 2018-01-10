@@ -51,7 +51,7 @@ namespace MarsTests
 
             foreach (char commandChar in moves)
             {
-                BaseCommand command = CommanfFactory(commandChar);
+                BaseCommand command = CommandFactory(commandChar);
                 RoverState newState = command.CalcNewState(coordinates, direction);
 
                 direction = newState.direction;
@@ -69,7 +69,7 @@ namespace MarsTests
             West
         }
 
-        internal BaseCommand CommanfFactory(char command)
+        internal BaseCommand CommandFactory(char command)
         {
             switch (command)
             {
