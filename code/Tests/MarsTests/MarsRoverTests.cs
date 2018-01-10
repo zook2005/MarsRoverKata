@@ -106,6 +106,9 @@ namespace MarsTests
         internal CardinalDirection direction;
         private int maxY;
         private int maxX;
+        internal List<Point> obstacles = new List<Point>();
+
+        public Status Status { get; internal set; }
 
         public MarsRover(Point startingPoint, CardinalDirection startingDirection, int maxX = MAXX, int maxY = MAXY)
         {
@@ -125,8 +128,19 @@ namespace MarsTests
                 BaseCommand command = CommandFactory(commandChar);
                 RoverState newState = command.CalcNewState(coordinates, direction);
 
-                newState.coordinates.X = newState.coordinates.X % (maxX + 1);
-                newState.coordinates.Y = newState.coordinates.Y % (maxY + 1);
+                newState.coordinates.X = newState.coordinates.X % (maxX + 1); // we use modulo to stay in the grid. the grid's size is maxX+1
+                newState.coordinates.Y = newState.coordinates.Y % (maxY + 1); // we use modulo to stay in the grid. the grid's size is maxY+1
+
+                if (obstacles.Contains(newState.coordinates))
+                {
+                    Status status = new Status()
+                    {
+                        RoverStatus = "obstacle detected",
+                        obstacleCoordinates = newState.coordinates
+                    };
+
+                    return new MarsRover(coordinates, direction) { Status = status };
+                }
 
                 direction = newState.direction;
                 coordinates = newState.coordinates;
@@ -154,6 +168,13 @@ namespace MarsTests
             }
             return null;
         }
+    }
+
+    public class Status
+    {
+        internal Point obstacleCoordinates;
+
+        internal string RoverStatus;
     }
 
     internal class RoverState
