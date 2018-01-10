@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,6 +50,25 @@ namespace MarsTests
             //Assert
             Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
             Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);
+        }
+
+        [Test]
+        public void CrossingOverEdgeOfGrid_0MaxYf_00()
+        {
+            //Arrange
+            const int MaxY = 9; //so grid's height is 10 squares 
+            Point startingPoint = new Point(0, MaxY); //(0,9)
+            MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
+            MarsRover rover = new MarsRover(startingPoint, startingDirection);
+            var moves = new[] { 'f' };
+
+            Point expectedCoordinates = new Point(0, 0); //crossing the grid leads to Y coordinate 0
+
+            //Act
+            var roverAtNewCoordinates = rover.Move(moves);
+
+            //Assert
+            Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
         }
     }
 
