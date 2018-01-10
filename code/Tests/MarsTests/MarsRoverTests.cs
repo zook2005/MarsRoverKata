@@ -164,7 +164,7 @@ namespace MarsTests
                 case 'f':
                     return new MoveForwardCommand();
                 case 'r':
-                    return new MoveRightCommand();
+                    return new TurnRightCommand();
             }
             return null;
         }
@@ -197,8 +197,14 @@ namespace MarsTests
         });
     }
 
-    internal class MoveRightCommand : BaseCommand
+    internal class TurnRightCommand : BaseCommand
     {
+        public override RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
+        {
+            var newDirectaion = CalcNewDirection(direction);
+            return new RoverState(coordinates, newDirectaion);
+        }
+
         protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
         {
             switch (direction)
@@ -219,16 +225,7 @@ namespace MarsTests
 
     internal class MoveForwardCommand : BaseCommand
     {
-        protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
-        {
-            MarsRover.CardinalDirection newDirection = direction; //walking forward, direction has not changed
-            return newDirection;
-        }
-    }
-
-    internal abstract class BaseCommand
-    {
-        public RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
+        public override RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
         {
             var newDirectaion = CalcNewDirection(direction);
             Vector move = CalcNextMove(coordinates, newDirectaion);
@@ -238,6 +235,16 @@ namespace MarsTests
             return new RoverState(newCoordinates, newDirectaion);
         }
 
+        protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
+        {
+            MarsRover.CardinalDirection newDirection = direction; //walking forward, direction has not changed
+            return newDirection;
+        }
+    }
+
+    internal abstract class BaseCommand
+    {
+        public abstract RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction);
         protected abstract MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction);
 
         protected Vector CalcNextMove(Point coordinates, MarsRover.CardinalDirection newDirectaion)
