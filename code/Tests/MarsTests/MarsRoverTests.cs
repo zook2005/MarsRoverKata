@@ -11,10 +11,21 @@ namespace MarsTests
     public class MarsRoverTests
     {
         [Test]
-        public void TestMethod()
+        public void MoveMultipleSteps_f_10()
         {
-            // TODO: Add your test code here
-            Assert.Pass("Your first passing test");
+            //Arrange
+            Point startingPoint = new Point(0, 0);
+            char startingDirection = 'e';
+            MarsRover rover = new MarsRover(startingPoint, startingDirection);
+            var moves = new[] { 'f' };
+
+            Point expectedCoordinates = new Point(1, 0);
+
+            //Act
+            var roverAtNewCoordinates = rover.Move(moves);
+
+            //Assert
+            Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
         }
     }
 }
