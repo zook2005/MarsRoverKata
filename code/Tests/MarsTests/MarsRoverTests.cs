@@ -13,7 +13,7 @@ namespace MarsTests
     public class MarsRoverTests
     {
         [Test]
-        public void MoveMultipleSteps_f_10()
+        public void MoveOneStepForward_f_10()
         {
             //Arrange
             Point startingPoint = new Point(0, 0);
