@@ -100,7 +100,8 @@ namespace MarsTests
                 BaseCommand command = CommandFactory(commandChar);
                 RoverState newState = command.CalcNewState(coordinates, direction);
 
-                if (newState.coordinates.Y > maxY) { newState.coordinates.Y = 0; }
+                newState.coordinates.X = newState.coordinates.X % (maxX + 1);
+                newState.coordinates.Y = newState.coordinates.Y % (maxY + 1);
 
                 direction = newState.direction;
                 coordinates = newState.coordinates;
