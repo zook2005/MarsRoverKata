@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,7 +56,7 @@ namespace MarsTests
         public void CrossingOverEdgeOfGrid_0MaxYf_00()
         {
             //Arrange
-            const int MaxY = 9; //so grid's height is 10 squares 
+            const int MaxY = 9; //so grid's height is 10 squares
             Point startingPoint = new Point(0, MaxY); //(0,9)
             MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
             MarsRover rover = new MarsRover(startingPoint, startingDirection);
@@ -74,11 +74,18 @@ namespace MarsTests
 
     internal class MarsRover
     {
+        const int MAXX = 9;
+        const int MAXY = 9;
+
         internal Point coordinates;
         internal CardinalDirection direction;
+        private int maxY;
+        private int maxX;
 
-        public MarsRover(Point startingPoint, CardinalDirection startingDirection)
+        public MarsRover(Point startingPoint, CardinalDirection startingDirection, int maxX = MAXX, int maxY = MAXY)
         {
+            this.maxX = maxX;
+            this.maxY = maxY;
             this.coordinates = startingPoint;
             this.direction = startingDirection;
         }
@@ -92,6 +99,8 @@ namespace MarsTests
             {
                 BaseCommand command = CommandFactory(commandChar);
                 RoverState newState = command.CalcNewState(coordinates, direction);
+
+                if (newState.coordinates.Y > maxY) { newState.coordinates.Y = 0; }
 
                 direction = newState.direction;
                 coordinates = newState.coordinates;
