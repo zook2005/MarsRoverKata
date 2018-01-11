@@ -13,6 +13,27 @@ namespace MarsTests
     public class MarsRoverTests
     {
         [Test]
+        public void TestNewMoveFunction()
+        {
+            //Arrange
+            Point startingPoint = new Point(0, 0);
+            MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.East;
+            MarsRover rover = new MarsRover(startingPoint, startingDirection);
+            var moves = new[] { 'f' };
+
+            Point expectedCoordinates = new Point(1, 0);
+            MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.East;
+
+            //Act
+            var status = rover.NewMove(moves);
+
+            //Assert
+            Assert.AreEqual(expectedCoordinates, rover.coordinates);
+            Assert.AreEqual(expectedStartingDirection, rover.direction);
+            Assert.IsTrue(status.code.Equals(Status.Code.OK));
+        }
+
+        [Test]
         public void MoveOneStepForward_f_10()
         {
             //Arrange
@@ -25,11 +46,12 @@ namespace MarsTests
             MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.East;
 
             //Act
-            var roverAtNewCoordinates = rover.Move(moves);
+            var status = rover.NewMove(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
-            Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);
+            Assert.AreEqual(expectedCoordinates, rover.coordinates);
+            Assert.AreEqual(expectedStartingDirection, rover.direction);
+            Assert.IsTrue(status.code.Equals(Status.Code.OK));
         }
 
         [Test]
@@ -45,11 +67,13 @@ namespace MarsTests
             MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.North;
 
             //Act
-            var roverAtNewCoordinates = rover.Move(moves);
+            var status = rover.NewMove(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
-            Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);
+            Assert.AreEqual(expectedCoordinates, rover.coordinates);
+            Assert.AreEqual(expectedStartingDirection, rover.direction);
+            Assert.IsTrue(status.code.Equals(Status.Code.OK));
+
         }
 
         [Test]
@@ -65,11 +89,12 @@ namespace MarsTests
             MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.East;
 
             //Act
-            var roverAtNewCoordinates = rover.Move(moves);
+            var status = rover.NewMove(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
-            Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);
+            Assert.AreEqual(expectedCoordinates, rover.coordinates);
+            Assert.AreEqual(expectedStartingDirection, rover.direction);
+            Assert.IsTrue(status.code.Equals(Status.Code.OK));
         }
 
         [Test]
@@ -85,10 +110,12 @@ namespace MarsTests
             Point expectedCoordinates = new Point(0, 0); //crossing the grid leads to Y coordinate 0
 
             //Act
-            var roverAtNewCoordinates = rover.Move(moves);
+            var status = rover.NewMove(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
+            Assert.AreEqual(expectedCoordinates, rover.coordinates);
+            Assert.IsTrue(status.code.Equals(Status.Code.OK));
+
         }
 
         [Test]
@@ -107,14 +134,14 @@ namespace MarsTests
             rover.obstacles = new List<Point>() { obstacleCoords };
 
             //Act
-            var roverAtNewCoordinates = rover.Move(moves);
+            var status = rover.NewMove(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates); //rover did not move
-            Assert.AreEqual("obstacle detected", roverAtNewCoordinates.Status.RoverStatus);
-            Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);//rover did not move
-            Assert.AreEqual(obstacleCoords, roverAtNewCoordinates.Status.obstacleCoordinates);
-            Assert.AreEqual(Status.Code.Fail, roverAtNewCoordinates.Status.code);
+            Assert.AreEqual(expectedCoordinates, rover.coordinates); //rover did not move
+            Assert.AreEqual(expectedStartingDirection, rover.direction);//rover did not move
+            Assert.AreEqual("obstacle detected", status.RoverStatus);
+            Assert.AreEqual(obstacleCoords, status.obstacleCoordinates);
+            Assert.AreEqual(Status.Code.Fail, status.code);
         }
 
         [Test]
@@ -148,7 +175,7 @@ namespace MarsTests
                 Status = new Status();
             }
 
-            internal MarsRover Move(char[] moves)
+            internal void Move(char[] moves)
             {
                 Point coordinates = this.coordinates;
                 CardinalDirection direction = this.direction;
@@ -169,13 +196,14 @@ namespace MarsTests
                             obstacleCoordinates = newPosition.coordinates
                         };
 
-                        return new MarsRover(coordinates, direction) { Status = status };
+                        this.Status = status;
+                        break;
                     }
 
                     direction = newPosition.direction;
                     coordinates = newPosition.coordinates;
                 }
-                return new MarsRover(coordinates, direction);
+                this.Position = new RoverPosition(coordinates, direction);
             }
 
             internal enum CardinalDirection
@@ -201,6 +229,12 @@ namespace MarsTests
                         return new TurnLeftCommand();
                 }
                 return null;
+            }
+
+            internal Status NewMove(char[] moves)
+            {
+                Move(moves);
+                return this.Status;
             }
         }
 
