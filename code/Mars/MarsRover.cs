@@ -24,6 +24,7 @@ namespace Mars
 
         internal void Move(char[] moves)
         {
+            this.Status.StatusCode = RoverStatus.RoverStatusCode.Ok;
             try
             {
                 foreach (char commandChar in moves)
@@ -40,11 +41,11 @@ namespace Mars
                     {
                         RoverStatus status = new RoverStatus(RoverStatus.RoverStatusCode.Fail)
                         {
-                            StatusMessage = $"obstacle detected at: {Coordinates}",
+                            StatusMessage = $"obstacle detected at: ({normalizeCoords})",
                         };
 
                         this.Status = status;
-                        break; //don't move and report error by changing own status
+                        return; //don't move and report error by changing own status
                     }
 
                     this.Position = normalizePosition;
