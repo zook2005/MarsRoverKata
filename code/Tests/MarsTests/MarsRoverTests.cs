@@ -1,11 +1,7 @@
 ﻿using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 
 namespace MarsTests
@@ -120,6 +116,33 @@ namespace MarsTests
             Assert.AreEqual(expectedCoordinates, rover.Coordinates);
             Assert.AreEqual(RoverStatus.RoverStatusCode.Ok, rover.Status.StatusCode);
         }
+        /// <summary>
+        /// input: coords:(0,0) ; direction: North ; command: 'b'
+        /// expected output: coords:(0,MaxY) 
+        /// </summary>
+        [Test]
+        public void CrossingOverEdgeOfGrid_00Nb_0MaxY()
+        {
+            //Arrange
+            const int width = 10;
+            const int height = 10;
+
+            Point startingPoint = new Point(0, 0); //(0,9)
+            MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
+
+            Grid map = new Grid(width, height);
+            MarsRover rover = new MarsRover(startingPoint, startingDirection, map, null);
+            var moves = new[] { 'b' };
+
+            Point expectedCoordinates = new Point(0, width - 1); //crossing the grid leads to Y coordinate 0
+
+            //Act
+            rover.Move(moves);
+
+            //Assert
+            Assert.AreEqual(expectedCoordinates, rover.Coordinates);
+            Assert.AreEqual(RoverStatus.RoverStatusCode.Ok, rover.Status.StatusCode);
+        }
 
         [Test]
         public void RespondToObstacle()
@@ -187,6 +210,53 @@ namespace MarsTests
             Assert.AreEqual(expectedCoordinates, normalizedCoords);
         }
 
+        [Test]
+        public void NormalizeCoordinatesTest_NegativeCoord()
+        {
+            //Arrange
+            const int width = 10;
+            const int height = 10;
+
+            Grid map = new Grid(width, height);
+            Point expectedCoordinates = new Point(0, 9);
+
+            //Act
+            Point normalizedCoords = map.NormalizeCoordinates(new Point(width, -1));
+
+            //Assert
+            Assert.AreEqual(expectedCoordinates, normalizedCoords);
+        }
+
+        [Test]
+        public void CommandFactory_InvalidCommand_Null()
+        {
+            //Arrange
+            Point startingPoint = new Point(0, 0);
+            MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
+            MarsRover rover = new MarsRover(startingPoint, startingDirection, null, null);
+
+            //Act
+            IRoverCommand cmd = rover.CommandFactory('?');
+
+            //Assert
+            Assert.IsNull(cmd);
+        }
+
+        [Test]
+        public void Move_InvalidCommand_Error()
+        {
+            //Arrange
+            Point startingPoint = new Point(0, 0);
+            MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
+            MarsRover rover = new MarsRover(startingPoint, startingDirection, null, null);
+
+            //Act
+            rover.Move(new[] { '?' });
+
+            //Assert
+            Assert.AreEqual(RoverStatus.RoverStatusCode.Error, rover.Status.StatusCode);
+        }
+
         internal class MarsRover
         {
             internal Point Coordinates { get { return Position.Coordinates; } }
@@ -195,14 +265,16 @@ namespace MarsTests
 
             public RoverStatus Status { get; private set; }
             public RoverPosition Position { get; private set; }
-            public IObstacleDetector ObstacleDetector { get; internal set; }
+            public IObstacleDetector ObstacleDetector { get; private set; }
 
             public MarsRover(Point startingPoint, CardinalDirection startingDirection, Grid map = null, IObstacleDetector obstacleDetector = null)
             {
-                this.Position = new RoverPosition(startingPoint, startingDirection);
                 this._map = map ?? new Grid();
                 this.ObstacleDetector = obstacleDetector;
                 Status = new RoverStatus();
+
+                var normalizedStartingPoint = this._map.NormalizeCoordinates(startingPoint);
+                this.Position = new RoverPosition(normalizedStartingPoint, startingDirection);
             }
 
             internal void Move(char[] moves)
@@ -367,7 +439,7 @@ namespace MarsTests
         {
             public override RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction)
             {
-                Vector move = CalcNextMove(coordinates, direction);
+                Vector move = CalcNextMove(direction);
 
                 var newCoordinates = Point.Add(coordinates, move);
 
@@ -379,7 +451,7 @@ namespace MarsTests
         {
             public override RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction)
             {
-                Vector move = CalcNextMove(coordinates, direction);
+                Vector move = CalcNextMove(direction);
 
                 var newCoordinates = Point.Subtract(coordinates, move); //we subtract the 'move' cause we are going backward
 
@@ -401,7 +473,7 @@ namespace MarsTests
         {
             public abstract RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction);
 
-            protected Vector CalcNextMove(Point coordinates, MarsRover.CardinalDirection direction)
+            protected Vector CalcNextMove(MarsRover.CardinalDirection direction)
             {
                 switch (direction)
                 {
@@ -417,14 +489,6 @@ namespace MarsTests
                         throw new RoverException($"enum member '{direction}' does not have a corresponding switch case");
                 }
             }
-
-            protected static ReadOnlyDictionary<MarsRover.CardinalDirection, Vector> CardinalDirectionToMoveDictionary = new ReadOnlyDictionary<MarsRover.CardinalDirection, Vector>(new Dictionary<MarsRover.CardinalDirection, Vector>
-            {
-                { MarsRover.CardinalDirection.North,    new Vector(0, 1)    },
-                { MarsRover.CardinalDirection.East,     new Vector(1, 0)    },
-                { MarsRover.CardinalDirection.South,    new Vector(0, -1)   },
-                { MarsRover.CardinalDirection.West,     new Vector(-1, 0)   }
-            });
         }
 
         internal interface IRoverCommand
@@ -463,6 +527,13 @@ namespace MarsTests
 
         public Grid(int width = WIDTH, int height = HEIGHT)
         {
+            //invalid input
+            if (width <= 0 || height <= 0)
+            {
+                width = WIDTH;
+                height = HEIGHT;
+            }
+
             this._width = width;
             this._height = height;
         }
@@ -471,9 +542,9 @@ namespace MarsTests
         {
             var normalizedCoords = new Point();
 
-            // we use modulo to stay in the grid
-            normalizedCoords.X = coords.X % (_width);
-            normalizedCoords.Y = coords.Y % (_height);
+            // we use modulo twice in order to stay in the grid
+            normalizedCoords.X = (coords.X % _width + _width) % _width;
+            normalizedCoords.Y = (coords.Y % _height + _height) % _height;
 
             return normalizedCoords;
         }
