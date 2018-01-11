@@ -143,8 +143,7 @@ namespace MarsTests
             //Assert
             Assert.AreEqual(expectedCoordinates, rover.Coordinates); //rover did not move
             Assert.AreEqual(expectedStartingDirection, rover.Direction);//rover did not move
-            Assert.AreEqual("obstacle detected", rover.Status.StatusMessage);
-            Assert.AreEqual(obstacleCoords, rover.Status.ObstacleCoordinates);
+            Assert.AreEqual($"obstacle detected at: {expectedCoordinates}", rover.Status.StatusMessage);
             Assert.AreEqual(RoverStatus.RoverStatusCode.Fail, rover.Status.StatusCode);
         }
 
@@ -224,8 +223,7 @@ namespace MarsTests
                         {
                             RoverStatus status = new RoverStatus(RoverStatus.RoverStatusCode.Fail)
                             {
-                                StatusMessage = "obstacle detected",
-                                ObstacleCoordinates = normalizePosition.Coordinates
+                                StatusMessage = $"obstacle detected at: {Coordinates}",
                             };
 
                             this.Status = status;
@@ -280,7 +278,6 @@ namespace MarsTests
             }
 
             internal string StatusMessage { get; set; }
-            internal Point ObstacleCoordinates { get; set; }
             internal RoverStatusCode StatusCode { get; set; }
 
             public RoverStatus() : this(RoverStatusCode.Ok)
