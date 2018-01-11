@@ -94,163 +94,226 @@ namespace MarsTests
             Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);//rover did not move
             Assert.AreEqual("obstacle detected", roverAtNewCoordinates.Status.RoverStatus);
             Assert.AreEqual(obstacleCoords, roverAtNewCoordinates.Status.obstacleCoordinates);
+
+
         }
 
-    }
-
-    internal class MarsRover
-    {
-        const int MAXX = 9;
-        const int MAXY = 9;
-
-        internal Point coordinates;
-        internal CardinalDirection direction;
-        private int maxY;
-        private int maxX;
-        internal List<Point> obstacles = new List<Point>();
-
-        public Status Status { get; internal set; }
-
-        public MarsRover(Point startingPoint, CardinalDirection startingDirection, int maxX = MAXX, int maxY = MAXY)
+        internal class MarsRover
         {
-            this.maxX = maxX;
-            this.maxY = maxY;
-            this.coordinates = startingPoint;
-            this.direction = startingDirection;
-        }
+            const int MAXX = 9;
+            const int MAXY = 9;
 
-        internal MarsRover Move(char[] moves)
-        {
-            Point coordinates = this.coordinates;
-            CardinalDirection direction = this.direction;
+            internal Point coordinates;
+            internal CardinalDirection direction;
+            private int maxY;
+            private int maxX;
+            internal List<Point> obstacles = new List<Point>();
 
-            foreach (char commandChar in moves)
+            public Status Status { get; internal set; }
+
+            public MarsRover(Point startingPoint, CardinalDirection startingDirection, int maxX = MAXX, int maxY = MAXY)
             {
-                BaseCommand command = CommandFactory(commandChar);
-                RoverState newState = command.CalcNewState(coordinates, direction);
+                this.maxX = maxX;
+                this.maxY = maxY;
+                this.coordinates = startingPoint;
+                this.direction = startingDirection;
+            }
 
-                newState.coordinates.X = newState.coordinates.X % (maxX + 1); // we use modulo to stay in the grid. the grid's size is maxX+1
-                newState.coordinates.Y = newState.coordinates.Y % (maxY + 1); // we use modulo to stay in the grid. the grid's size is maxY+1
+            internal MarsRover Move(char[] moves)
+            {
+                Point coordinates = this.coordinates;
+                CardinalDirection direction = this.direction;
 
-                if (obstacles.Contains(newState.coordinates))
+                foreach (char commandChar in moves)
                 {
-                    Status status = new Status()
+                    IRoverCommand command = CommandFactory(commandChar);
+                    RoverState newState = command.CalcNewState(coordinates, direction);
+
+                    newState.coordinates.X = newState.coordinates.X % (maxX + 1); // we use modulo to stay in the grid. the grid's size is maxX+1
+                    newState.coordinates.Y = newState.coordinates.Y % (maxY + 1); // we use modulo to stay in the grid. the grid's size is maxY+1
+
+                    if (obstacles.Contains(newState.coordinates))
                     {
-                        RoverStatus = "obstacle detected",
-                        obstacleCoordinates = newState.coordinates
-                    };
+                        Status status = new Status()
+                        {
+                            RoverStatus = "obstacle detected",
+                            obstacleCoordinates = newState.coordinates
+                        };
 
-                    return new MarsRover(coordinates, direction) { Status = status };
+                        return new MarsRover(coordinates, direction) { Status = status };
+                    }
+
+                    direction = newState.direction;
+                    coordinates = newState.coordinates;
                 }
-
-                direction = newState.direction;
-                coordinates = newState.coordinates;
+                return new MarsRover(coordinates, direction);
             }
-            return new MarsRover(coordinates, direction);
-        }
 
-        internal enum CardinalDirection
-        {
-            North,
-            East,
-            South,
-            West
-        }
-
-        internal BaseCommand CommandFactory(char command)
-        {
-            switch (command)
+            internal enum CardinalDirection
             {
-                case 'f':
-                    return new MoveForwardCommand();
-                case 'r':
-                    return new TurnRightCommand();
+                North,
+                East,
+                South,
+                West
             }
-            return null;
+
+            internal IRoverCommand CommandFactory(char command)
+            {
+                switch (command)
+                {
+                    case 'f':
+                        return new MoveForwardCommand();
+                    case 'b':
+                        return new MoveBackwardCommand();
+                    case 'r':
+                        return new TurnRightCommand();
+                    case 'l':
+                        return new TurnLeftCommand();
+                }
+                return null;
+            }
         }
-    }
 
-    public class Status
-    {
-        internal Point obstacleCoordinates;
-
-        internal string RoverStatus;
-    }
-
-    internal class RoverState
-    {
-        internal MarsRover.CardinalDirection direction;
-        internal Point coordinates;
-
-        public RoverState(Point coordinates, MarsRover.CardinalDirection direction)
+        public class Status
         {
-            this.coordinates = coordinates;
-            this.direction = direction;
+            internal Point obstacleCoordinates;
+
+            internal string RoverStatus;
         }
 
-        public static ReadOnlyDictionary<MarsRover.CardinalDirection, Vector> CardinlDirectionToMoveDictionary = new ReadOnlyDictionary<MarsRover.CardinalDirection, Vector>(new Dictionary<MarsRover.CardinalDirection, Vector>
+        internal class RoverState
+        {
+            internal MarsRover.CardinalDirection direction;
+            internal Point coordinates;
+
+            public RoverState(Point coordinates, MarsRover.CardinalDirection direction)
+            {
+                this.coordinates = coordinates;
+                this.direction = direction;
+            }
+
+            public static ReadOnlyDictionary<MarsRover.CardinalDirection, Vector> CardinlDirectionToMoveDictionary = new ReadOnlyDictionary<MarsRover.CardinalDirection, Vector>(new Dictionary<MarsRover.CardinalDirection, Vector>
         {
             { MarsRover.CardinalDirection.North,    new Vector(0, 1)    },
             { MarsRover.CardinalDirection.East,     new Vector(1, 0)    },
             { MarsRover.CardinalDirection.South,    new Vector(0, -1)   },
             { MarsRover.CardinalDirection.West,     new Vector(-1, 0)   }
         });
-    }
-
-    internal class TurnRightCommand : BaseCommand
-    {
-        public override RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
-        {
-            var newDirectaion = CalcNewDirection(direction);
-            return new RoverState(coordinates, newDirectaion);
         }
 
-        protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
+        internal class TurnRightCommand : TurnCommand
         {
-            switch (direction)
+            protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
             {
-                case MarsRover.CardinalDirection.North:
-                    return MarsRover.CardinalDirection.East;
-                case MarsRover.CardinalDirection.East:
-                    return MarsRover.CardinalDirection.South;
-                case MarsRover.CardinalDirection.South:
-                    return MarsRover.CardinalDirection.West;
-                case MarsRover.CardinalDirection.West:
-                    return MarsRover.CardinalDirection.North;
-                default:
-                    throw new ArgumentOutOfRangeException($"enum member '{direction}' does not have a corresponding switch case");
+                switch (direction)
+                {
+                    case MarsRover.CardinalDirection.North:
+                        return MarsRover.CardinalDirection.East;
+                    case MarsRover.CardinalDirection.East:
+                        return MarsRover.CardinalDirection.South;
+                    case MarsRover.CardinalDirection.South:
+                        return MarsRover.CardinalDirection.West;
+                    case MarsRover.CardinalDirection.West:
+                        return MarsRover.CardinalDirection.North;
+                    default:
+                        throw new ArgumentOutOfRangeException($"enum member '{direction}' does not have a corresponding switch case");
+                }
             }
         }
-    }
 
-    internal class MoveForwardCommand : BaseCommand
-    {
-        public override RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
+        internal class TurnLeftCommand : TurnCommand
         {
-            var newDirectaion = CalcNewDirection(direction);
-            Vector move = CalcNextMove(coordinates, newDirectaion);
-
-            var newCoordinates = Point.Add(coordinates, move);
-
-            return new RoverState(newCoordinates, newDirectaion);
+            protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
+            {
+                switch (direction)
+                {
+                    case MarsRover.CardinalDirection.East:
+                        return MarsRover.CardinalDirection.North;
+                    case MarsRover.CardinalDirection.South:
+                        return MarsRover.CardinalDirection.East;
+                    case MarsRover.CardinalDirection.West:
+                        return MarsRover.CardinalDirection.South;
+                    case MarsRover.CardinalDirection.North:
+                        return MarsRover.CardinalDirection.West;
+                    default:
+                        throw new ArgumentOutOfRangeException($"enum member '{direction}' does not have a corresponding switch case");
+                }
+            }
         }
 
-        protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
+        internal class MoveForwardCommand : MoveCommand
         {
-            MarsRover.CardinalDirection newDirection = direction; //walking forward, direction has not changed
-            return newDirection;
+            public override RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
+            {
+                var newDirectaion = CalcNewDirection(direction);
+                Vector move = CalcNextMove(coordinates, newDirectaion);
+
+                var newCoordinates = Point.Add(coordinates, move);
+
+                return new RoverState(newCoordinates, newDirectaion);
+            }
+
+            protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
+            {
+                MarsRover.CardinalDirection newDirection = direction; //walking forward, direction has not changed
+                return newDirection;
+            }
         }
-    }
-
-    internal abstract class BaseCommand
-    {
-        public abstract RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction);
-        protected abstract MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction);
-
-        protected Vector CalcNextMove(Point coordinates, MarsRover.CardinalDirection newDirectaion)
+        internal class MoveBackwardCommand : MoveCommand
         {
-            Vector newCoordinates = RoverState.CardinlDirectionToMoveDictionary[newDirectaion];
-            return newCoordinates;
+            public override RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
+            {
+                var newDirectaion = CalcNewDirection(direction);
+                Vector move = CalcNextMove(coordinates, newDirectaion);
+
+                var newCoordinates = Point.Add(coordinates, move);
+
+                return new RoverState(newCoordinates, newDirectaion);
+            }
+
+            protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
+            {
+                switch (direction)
+                {
+                    case MarsRover.CardinalDirection.East:
+                        return MarsRover.CardinalDirection.West;
+                    case MarsRover.CardinalDirection.South:
+                        return MarsRover.CardinalDirection.North;
+                    case MarsRover.CardinalDirection.West:
+                        return MarsRover.CardinalDirection.East;
+                    case MarsRover.CardinalDirection.North:
+                        return MarsRover.CardinalDirection.South;
+                    default:
+                        throw new ArgumentOutOfRangeException($"enum member '{direction}' does not have a corresponding switch case");
+                }
+            }
+        }
+
+        internal abstract class TurnCommand : IRoverCommand
+        {
+            public RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
+            {
+                var newDirectaion = CalcNewDirection(direction);
+                return new RoverState(coordinates, newDirectaion);
+            }
+            protected abstract MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction);
+        }
+
+        internal abstract class MoveCommand : IRoverCommand
+        {
+            public abstract RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction);
+            protected abstract MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction);
+
+            protected Vector CalcNextMove(Point coordinates, MarsRover.CardinalDirection newDirectaion)
+            {
+                Vector newCoordinates = RoverState.CardinlDirectionToMoveDictionary[newDirectaion];
+                return newCoordinates;
+            }
+        }
+
+        internal interface IRoverCommand
+        {
+            RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction);
         }
     }
 }
