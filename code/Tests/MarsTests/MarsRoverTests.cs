@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Collections.ObjectModel;
+using System.Runtime.Serialization;
 
 namespace MarsTests
 {
@@ -207,28 +208,39 @@ namespace MarsTests
 
             internal void Move(char[] moves)
             {
-                foreach (char commandChar in moves)
+                try
                 {
-                    IRoverCommand command = CommandFactory(commandChar);
-
-                    RoverPosition newPosition = command.CalcNewPosition(this.Coordinates, this.Direction);
-
-                    var normalizeCoords = _map.NormalizeCoordinates(newPosition.Coordinates);
-                    RoverPosition normalizePosition = new RoverPosition(normalizeCoords, newPosition.Direction);
-
-                    if (ObstacleDetector != null && ObstacleDetector.IsObstacleDetected(normalizePosition.Coordinates))
+                    foreach (char commandChar in moves)
                     {
-                        RoverStatus status = new RoverStatus(RoverStatus.RoverStatusCode.Fail)
+                        IRoverCommand command = CommandFactory(commandChar);
+                        if (command == null) throw new RoverException($"invalid command character: {command}!");
+
+                        RoverPosition newPosition = command.CalcNewPosition(this.Coordinates, this.Direction);
+
+                        var normalizeCoords = _map.NormalizeCoordinates(newPosition.Coordinates);
+                        RoverPosition normalizePosition = new RoverPosition(normalizeCoords, newPosition.Direction);
+
+                        if (ObstacleDetector != null && ObstacleDetector.IsObstacleDetected(normalizePosition.Coordinates))
                         {
-                            StatusMessage = "obstacle detected",
-                            ObstacleCoordinates = normalizePosition.Coordinates
-                        };
+                            RoverStatus status = new RoverStatus(RoverStatus.RoverStatusCode.Fail)
+                            {
+                                StatusMessage = "obstacle detected",
+                                ObstacleCoordinates = normalizePosition.Coordinates
+                            };
 
-                        this.Status = status;
-                        break; //don't move and report error by changing own status
+                            this.Status = status;
+                            break; //don't move and report error by changing own status
+                        }
+
+                        this.Position = normalizePosition;
                     }
-
-                    this.Position = normalizePosition;
+                }
+                catch (RoverException e)
+                {
+                    this.Status = new RoverStatus(RoverStatus.RoverStatusCode.Error)
+                    {
+                        StatusMessage = e.Message
+                    };
                 }
             }
 
@@ -260,7 +272,12 @@ namespace MarsTests
 
         public class RoverStatus
         {
-            public enum RoverStatusCode { Ok, Fail }
+            public enum RoverStatusCode
+            {
+                Ok,
+                Fail,
+                Error
+            }
 
             internal string StatusMessage { get; set; }
             internal Point ObstacleCoordinates { get; set; }
@@ -324,7 +341,7 @@ namespace MarsTests
                     case MarsRover.CardinalDirection.West:
                         return MarsRover.CardinalDirection.North;
                     default:
-                        throw new ArgumentOutOfRangeException($"enum member '{direction}' does not have a corresponding switch case");
+                        throw new RoverException($"enum member '{direction}' does not have a corresponding switch case");
                 }
             }
         }
@@ -344,7 +361,7 @@ namespace MarsTests
                     case MarsRover.CardinalDirection.North:
                         return MarsRover.CardinalDirection.West;
                     default:
-                        throw new ArgumentOutOfRangeException($"enum member '{direction}' does not have a corresponding switch case");
+                        throw new RoverException($"enum member '{direction}' does not have a corresponding switch case");
                 }
             }
         }
@@ -387,10 +404,21 @@ namespace MarsTests
         {
             public abstract RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction);
 
-            protected Vector CalcNextMove(Point coordinates, MarsRover.CardinalDirection newDirectaion)
+            protected Vector CalcNextMove(Point coordinates, MarsRover.CardinalDirection direction)
             {
-                Vector newCoordinates = CardinalDirectionToMoveDictionary[newDirectaion];
-                return newCoordinates;
+                switch (direction)
+                {
+                    case MarsRover.CardinalDirection.North:
+                        return new Vector(0, 1);
+                    case MarsRover.CardinalDirection.East:
+                        return new Vector(1, 0);
+                    case MarsRover.CardinalDirection.South:
+                        return new Vector(0, -1);
+                    case MarsRover.CardinalDirection.West:
+                        return new Vector(-1, 0);
+                    default:
+                        throw new RoverException($"enum member '{direction}' does not have a corresponding switch case");
+                }
             }
 
             protected static ReadOnlyDictionary<MarsRover.CardinalDirection, Vector> CardinalDirectionToMoveDictionary = new ReadOnlyDictionary<MarsRover.CardinalDirection, Vector>(new Dictionary<MarsRover.CardinalDirection, Vector>
