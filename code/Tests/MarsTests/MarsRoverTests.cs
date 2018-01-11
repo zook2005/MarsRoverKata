@@ -107,13 +107,14 @@ namespace MarsTests
             rover.obstacles = new List<Point>() { obstacleCoords };
 
             //Act
-            var roverAtNewCoordinates = rover.Move(moves); //implement this new test!
+            var roverAtNewCoordinates = rover.Move(moves);
 
             //Assert
             Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates); //rover did not move
-            Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);//rover did not move
             Assert.AreEqual("obstacle detected", roverAtNewCoordinates.Status.RoverStatus);
+            Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);//rover did not move
             Assert.AreEqual(obstacleCoords, roverAtNewCoordinates.Status.obstacleCoordinates);
+            Assert.AreEqual(Status.Code.Fail, roverAtNewCoordinates.Status.code);
         }
 
         [Test]
@@ -144,6 +145,7 @@ namespace MarsTests
                 this.maxX = maxX;
                 this.maxY = maxY;
                 this.Position = new RoverPosition(startingPoint, startingDirection);
+                Status = new Status();
             }
 
             internal MarsRover Move(char[] moves)
@@ -161,7 +163,7 @@ namespace MarsTests
 
                     if (obstacles.Contains(newPosition.coordinates))
                     {
-                        Status status = new Status()
+                        Status status = new Status(Status.Code.Fail)
                         {
                             RoverStatus = "obstacle detected",
                             obstacleCoordinates = newPosition.coordinates
@@ -204,9 +206,19 @@ namespace MarsTests
 
         public class Status
         {
-            internal Point obstacleCoordinates;
-
             internal string RoverStatus;
+            internal Point obstacleCoordinates;
+            internal Code code;
+            public Status() : this(Code.OK)
+            {
+                RoverStatus = "OK";
+            }
+            public Status(Code code)
+            {
+
+                this.code = code;
+            }
+            public enum Code { OK, Fail }
         }
 
         internal class RoverPosition
