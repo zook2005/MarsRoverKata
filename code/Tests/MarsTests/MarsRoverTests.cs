@@ -239,14 +239,6 @@ namespace MarsTests
             {
                 return !(x == y);
             }
-
-            public static ReadOnlyDictionary<MarsRover.CardinalDirection, Vector> CardinlDirectionToMoveDictionary = new ReadOnlyDictionary<MarsRover.CardinalDirection, Vector>(new Dictionary<MarsRover.CardinalDirection, Vector>
-        {
-            { MarsRover.CardinalDirection.North,    new Vector(0, 1)    },
-            { MarsRover.CardinalDirection.East,     new Vector(1, 0)    },
-            { MarsRover.CardinalDirection.South,    new Vector(0, -1)   },
-            { MarsRover.CardinalDirection.West,     new Vector(-1, 0)   }
-        });
         }
 
         internal class TurnRightCommand : TurnCommand
@@ -328,9 +320,17 @@ namespace MarsTests
 
             protected Vector CalcNextMove(Point coordinates, MarsRover.CardinalDirection newDirectaion)
             {
-                Vector newCoordinates = RoverPosition.CardinlDirectionToMoveDictionary[newDirectaion];
+                Vector newCoordinates = CardinlDirectionToMoveDictionary[newDirectaion];
                 return newCoordinates;
             }
+
+            protected static ReadOnlyDictionary<MarsRover.CardinalDirection, Vector> CardinlDirectionToMoveDictionary = new ReadOnlyDictionary<MarsRover.CardinalDirection, Vector>(new Dictionary<MarsRover.CardinalDirection, Vector>
+            {
+                { MarsRover.CardinalDirection.North,    new Vector(0, 1)    },
+                { MarsRover.CardinalDirection.East,     new Vector(1, 0)    },
+                { MarsRover.CardinalDirection.South,    new Vector(0, -1)   },
+                { MarsRover.CardinalDirection.West,     new Vector(-1, 0)   }
+            });
         }
 
         internal interface IRoverCommand
