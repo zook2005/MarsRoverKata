@@ -25,12 +25,12 @@ namespace MarsTests
             MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.East;
 
             //Act
-            var status = rover.NewMove(moves);
+            rover.Move(moves);
 
             //Assert
             Assert.AreEqual(expectedCoordinates, rover.coordinates);
             Assert.AreEqual(expectedStartingDirection, rover.direction);
-            Assert.IsTrue(status.code.Equals(Status.Code.OK));
+            Assert.AreEqual(Status.Code.OK, rover.Status.code);
         }
 
         [Test]
@@ -46,12 +46,12 @@ namespace MarsTests
             MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.East;
 
             //Act
-            var status = rover.NewMove(moves);
+            rover.Move(moves);
 
             //Assert
             Assert.AreEqual(expectedCoordinates, rover.coordinates);
             Assert.AreEqual(expectedStartingDirection, rover.direction);
-            Assert.IsTrue(status.code.Equals(Status.Code.OK));
+            Assert.AreEqual(Status.Code.OK, rover.Status.code);
         }
 
         [Test]
@@ -67,12 +67,12 @@ namespace MarsTests
             MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.North;
 
             //Act
-            var status = rover.NewMove(moves);
+            rover.Move(moves);
 
             //Assert
             Assert.AreEqual(expectedCoordinates, rover.coordinates);
             Assert.AreEqual(expectedStartingDirection, rover.direction);
-            Assert.IsTrue(status.code.Equals(Status.Code.OK));
+            Assert.AreEqual(Status.Code.OK, rover.Status.code);
 
         }
 
@@ -89,12 +89,12 @@ namespace MarsTests
             MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.East;
 
             //Act
-            var status = rover.NewMove(moves);
+            rover.Move(moves);
 
             //Assert
             Assert.AreEqual(expectedCoordinates, rover.coordinates);
             Assert.AreEqual(expectedStartingDirection, rover.direction);
-            Assert.IsTrue(status.code.Equals(Status.Code.OK));
+            Assert.AreEqual(Status.Code.OK, rover.Status.code);
         }
 
         [Test]
@@ -110,11 +110,11 @@ namespace MarsTests
             Point expectedCoordinates = new Point(0, 0); //crossing the grid leads to Y coordinate 0
 
             //Act
-            var status = rover.NewMove(moves);
+            rover.Move(moves);
 
             //Assert
             Assert.AreEqual(expectedCoordinates, rover.coordinates);
-            Assert.IsTrue(status.code.Equals(Status.Code.OK));
+            Assert.AreEqual(Status.Code.OK, rover.Status.code);
 
         }
 
@@ -134,14 +134,14 @@ namespace MarsTests
             rover.obstacles = new List<Point>() { obstacleCoords };
 
             //Act
-            var status = rover.NewMove(moves);
+            rover.Move(moves);
 
             //Assert
             Assert.AreEqual(expectedCoordinates, rover.coordinates); //rover did not move
             Assert.AreEqual(expectedStartingDirection, rover.direction);//rover did not move
-            Assert.AreEqual("obstacle detected", status.RoverStatus);
-            Assert.AreEqual(obstacleCoords, status.obstacleCoordinates);
-            Assert.AreEqual(Status.Code.Fail, status.code);
+            Assert.AreEqual("obstacle detected", rover.Status.RoverStatus);
+            Assert.AreEqual(obstacleCoords, rover.Status.obstacleCoordinates);
+            Assert.AreEqual(Status.Code.Fail, rover.Status.code);
         }
 
         [Test]
@@ -229,12 +229,6 @@ namespace MarsTests
                         return new TurnLeftCommand();
                 }
                 return null;
-            }
-
-            internal Status NewMove(char[] moves)
-            {
-                Move(moves);
-                return this.Status;
             }
         }
 
