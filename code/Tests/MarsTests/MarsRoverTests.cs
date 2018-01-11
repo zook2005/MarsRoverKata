@@ -189,9 +189,6 @@ namespace MarsTests
 
         internal class MarsRover
         {
-            const int WIDTH = 10;
-            const int Height = 11;
-
             internal Point coordinates { get { return Position.coordinates; } }
             internal CardinalDirection direction { get { return Position.direction; } }
             private Grid _map;
@@ -203,7 +200,7 @@ namespace MarsTests
             public MarsRover(Point startingPoint, CardinalDirection startingDirection, Grid map = null, IObstacleDetector obstacleDetector = null)
             {
                 this.Position = new RoverPosition(startingPoint, startingDirection);
-                this._map = map ?? new Grid(WIDTH, Height);
+                this._map = map ?? new Grid();
                 this.ObstacleDetector = obstacleDetector;
                 Status = new Status();
             }
@@ -409,10 +406,14 @@ namespace MarsTests
 
     internal class Grid
     {
+
+        const int WIDTH = 10;
+        const int HEIGHT = 10;
+
         private int _width;
         private int _height;
 
-        public Grid(int width, int height)
+        public Grid(int width = WIDTH, int height = HEIGHT)
         {
             this._width = width;
             this._height = height;
