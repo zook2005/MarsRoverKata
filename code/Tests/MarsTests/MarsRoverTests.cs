@@ -130,20 +130,20 @@ namespace MarsTests
             const int MAXX = 9;
             const int MAXY = 9;
 
-            internal Point coordinates;
-            internal CardinalDirection direction;
+            internal Point coordinates { get { return Position.coordinates; } }
+            internal CardinalDirection direction { get { return Position.direction; } }
             private int maxY;
             private int maxX;
             internal List<Point> obstacles = new List<Point>();
 
             public Status Status { get; internal set; }
+            public RoverPosition Position { get; private set; }
 
             public MarsRover(Point startingPoint, CardinalDirection startingDirection, int maxX = MAXX, int maxY = MAXY)
             {
                 this.maxX = maxX;
                 this.maxY = maxY;
-                this.coordinates = startingPoint;
-                this.direction = startingDirection;
+                this.Position = new RoverPosition(startingPoint, startingDirection);
             }
 
             internal MarsRover Move(char[] moves)
