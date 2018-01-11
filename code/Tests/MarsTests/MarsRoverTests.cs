@@ -165,7 +165,7 @@ namespace MarsTests
             //Assert
             Assert.AreEqual(expectedCoordinates, rover.Coordinates); //rover did not move
             Assert.AreEqual(expectedStartingDirection, rover.Direction);//rover did not move
-            Assert.AreEqual($"obstacle detected at: {expectedCoordinates}", rover.Status.StatusMessage);
+            Assert.AreEqual($"obstacle detected at: ({obstacleCoords})", rover.Status.StatusMessage);
             Assert.AreEqual(RoverStatus.RoverStatusCode.Fail, rover.Status.StatusCode);
         }
 
