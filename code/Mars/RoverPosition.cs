@@ -14,6 +14,13 @@ namespace Mars
             this.Direction = direction;
         }
 
+        public override string ToString()
+        {
+            return $"rover is at ({Coordinates}) facing {Direction}";
+
+
+        }
+
         public override bool Equals(Object obj)
         {
             return obj is RoverPosition && this == (RoverPosition)obj;
