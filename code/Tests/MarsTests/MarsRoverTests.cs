@@ -159,6 +159,7 @@ namespace MarsTests
 
             internal IRoverCommand CommandFactory(char command)
             {
+                command = char.ToLower(command); //normalizing input
                 switch (command)
                 {
                     case 'f':
