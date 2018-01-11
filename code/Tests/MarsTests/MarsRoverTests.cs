@@ -97,12 +97,12 @@ namespace MarsTests
         }
 
         [Test]
-        public void TestRoverStateEquality()
+        public void TestRoverPositionEquality()
         {
-            var state1 = new RoverState(new Point(1, 1), MarsRover.CardinalDirection.East);
-            var state2 = new RoverState(new Point(1, 1), MarsRover.CardinalDirection.East);
-            Assert.IsTrue(state1.GetHashCode().Equals(state2.GetHashCode()));
-            Assert.IsTrue(state1.Equals(state2));
+            var position1 = new RoverPosition(new Point(1, 1), MarsRover.CardinalDirection.East);
+            var position2 = new RoverPosition(new Point(1, 1), MarsRover.CardinalDirection.East);
+            Assert.IsTrue(position1.GetHashCode().Equals(position2.GetHashCode()));
+            Assert.IsTrue(position1.Equals(position2));
         }
 
         internal class MarsRover
@@ -134,24 +134,24 @@ namespace MarsTests
                 foreach (char commandChar in moves)
                 {
                     IRoverCommand command = CommandFactory(commandChar);
-                    RoverState newState = command.CalcNewState(coordinates, direction);
+                    RoverPosition newPosition = command.CalcNewPosition(coordinates, direction);
 
-                    newState.coordinates.X = newState.coordinates.X % (maxX + 1); // we use modulo to stay in the grid. the grid's size is maxX+1
-                    newState.coordinates.Y = newState.coordinates.Y % (maxY + 1); // we use modulo to stay in the grid. the grid's size is maxY+1
+                    newPosition.coordinates.X = newPosition.coordinates.X % (maxX + 1); // we use modulo to stay in the grid. the grid's size is maxX+1
+                    newPosition.coordinates.Y = newPosition.coordinates.Y % (maxY + 1); // we use modulo to stay in the grid. the grid's size is maxY+1
 
-                    if (obstacles.Contains(newState.coordinates))
+                    if (obstacles.Contains(newPosition.coordinates))
                     {
                         Status status = new Status()
                         {
                             RoverStatus = "obstacle detected",
-                            obstacleCoordinates = newState.coordinates
+                            obstacleCoordinates = newPosition.coordinates
                         };
 
                         return new MarsRover(coordinates, direction) { Status = status };
                     }
 
-                    direction = newState.direction;
-                    coordinates = newState.coordinates;
+                    direction = newPosition.direction;
+                    coordinates = newPosition.coordinates;
                 }
                 return new MarsRover(coordinates, direction);
             }
@@ -189,12 +189,12 @@ namespace MarsTests
             internal string RoverStatus;
         }
 
-        internal class RoverState
+        internal class RoverPosition
         {
             internal MarsRover.CardinalDirection direction;
             internal Point coordinates;
 
-            public RoverState(Point coordinates, MarsRover.CardinalDirection direction)
+            public RoverPosition(Point coordinates, MarsRover.CardinalDirection direction)
             {
                 this.coordinates = coordinates;
                 this.direction = direction;
@@ -202,7 +202,7 @@ namespace MarsTests
 
             public override bool Equals(Object obj)
             {
-                return obj is RoverState && this == (RoverState)obj;
+                return obj is RoverPosition && this == (RoverPosition)obj;
             }
 
             public override int GetHashCode()
@@ -210,12 +210,12 @@ namespace MarsTests
                 return Tuple.Create(coordinates, direction).GetHashCode();
             }
 
-            public static bool operator ==(RoverState x, RoverState y)
+            public static bool operator ==(RoverPosition x, RoverPosition y)
             {
                 return x.coordinates == y.coordinates && x.direction == y.direction;
             }
 
-            public static bool operator !=(RoverState x, RoverState y)
+            public static bool operator !=(RoverPosition x, RoverPosition y)
             {
                 return !(x == y);
             }
@@ -271,14 +271,14 @@ namespace MarsTests
 
         internal class MoveForwardCommand : MoveCommand
         {
-            public override RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
+            public override RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction)
             {
                 var newDirectaion = CalcNewDirection(direction);
                 Vector move = CalcNextMove(coordinates, newDirectaion);
 
                 var newCoordinates = Point.Add(coordinates, move);
 
-                return new RoverState(newCoordinates, newDirectaion);
+                return new RoverPosition(newCoordinates, newDirectaion);
             }
 
             protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
@@ -289,14 +289,14 @@ namespace MarsTests
         }
         internal class MoveBackwardCommand : MoveCommand
         {
-            public override RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
+            public override RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction)
             {
                 var newDirectaion = CalcNewDirection(direction);
                 Vector move = CalcNextMove(coordinates, newDirectaion);
 
                 var newCoordinates = Point.Add(coordinates, move);
 
-                return new RoverState(newCoordinates, newDirectaion);
+                return new RoverPosition(newCoordinates, newDirectaion);
             }
 
             protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
@@ -319,29 +319,29 @@ namespace MarsTests
 
         internal abstract class TurnCommand : IRoverCommand
         {
-            public RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction)
+            public RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction)
             {
                 var newDirectaion = CalcNewDirection(direction);
-                return new RoverState(coordinates, newDirectaion);
+                return new RoverPosition(coordinates, newDirectaion);
             }
             protected abstract MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction);
         }
 
         internal abstract class MoveCommand : IRoverCommand
         {
-            public abstract RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction);
+            public abstract RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction);
             protected abstract MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction);
 
             protected Vector CalcNextMove(Point coordinates, MarsRover.CardinalDirection newDirectaion)
             {
-                Vector newCoordinates = RoverState.CardinlDirectionToMoveDictionary[newDirectaion];
+                Vector newCoordinates = RoverPosition.CardinlDirectionToMoveDictionary[newDirectaion];
                 return newCoordinates;
             }
         }
 
         internal interface IRoverCommand
         {
-            RoverState CalcNewState(Point coordinates, MarsRover.CardinalDirection direction);
+            RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction);
         }
     }
 }
