@@ -28,9 +28,9 @@ namespace MarsTests
             rover.Move(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, rover.coordinates);
-            Assert.AreEqual(expectedStartingDirection, rover.direction);
-            Assert.AreEqual(Status.Code.OK, rover.Status.code);
+            Assert.AreEqual(expectedCoordinates, rover.Coordinates);
+            Assert.AreEqual(expectedStartingDirection, rover.Direction);
+            Assert.AreEqual(RoverStatus.RoverStatusCode.Ok, rover.Status.StatusCode);
         }
 
         [Test]
@@ -49,9 +49,9 @@ namespace MarsTests
             rover.Move(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, rover.coordinates);
-            Assert.AreEqual(expectedStartingDirection, rover.direction);
-            Assert.AreEqual(Status.Code.OK, rover.Status.code);
+            Assert.AreEqual(expectedCoordinates, rover.Coordinates);
+            Assert.AreEqual(expectedStartingDirection, rover.Direction);
+            Assert.AreEqual(RoverStatus.RoverStatusCode.Ok, rover.Status.StatusCode);
         }
 
         [Test]
@@ -70,9 +70,9 @@ namespace MarsTests
             rover.Move(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, rover.coordinates);
-            Assert.AreEqual(expectedStartingDirection, rover.direction);
-            Assert.AreEqual(Status.Code.OK, rover.Status.code);
+            Assert.AreEqual(expectedCoordinates, rover.Coordinates);
+            Assert.AreEqual(expectedStartingDirection, rover.Direction);
+            Assert.AreEqual(RoverStatus.RoverStatusCode.Ok, rover.Status.StatusCode);
         }
 
         [Test]
@@ -91,9 +91,9 @@ namespace MarsTests
             rover.Move(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, rover.coordinates);
-            Assert.AreEqual(expectedStartingDirection, rover.direction);
-            Assert.AreEqual(Status.Code.OK, rover.Status.code);
+            Assert.AreEqual(expectedCoordinates, rover.Coordinates);
+            Assert.AreEqual(expectedStartingDirection, rover.Direction);
+            Assert.AreEqual(RoverStatus.RoverStatusCode.Ok, rover.Status.StatusCode);
         }
 
         [Test]
@@ -116,8 +116,8 @@ namespace MarsTests
             rover.Move(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, rover.coordinates);
-            Assert.AreEqual(Status.Code.OK, rover.Status.code);
+            Assert.AreEqual(expectedCoordinates, rover.Coordinates);
+            Assert.AreEqual(RoverStatus.RoverStatusCode.Ok, rover.Status.StatusCode);
         }
 
         [Test]
@@ -140,11 +140,11 @@ namespace MarsTests
             rover.Move(moves);
 
             //Assert
-            Assert.AreEqual(expectedCoordinates, rover.coordinates); //rover did not move
-            Assert.AreEqual(expectedStartingDirection, rover.direction);//rover did not move
-            Assert.AreEqual("obstacle detected", rover.Status.RoverStatus);
-            Assert.AreEqual(obstacleCoords, rover.Status.obstacleCoordinates);
-            Assert.AreEqual(Status.Code.Fail, rover.Status.code);
+            Assert.AreEqual(expectedCoordinates, rover.Coordinates); //rover did not move
+            Assert.AreEqual(expectedStartingDirection, rover.Direction);//rover did not move
+            Assert.AreEqual("obstacle detected", rover.Status.StatusMessage);
+            Assert.AreEqual(obstacleCoords, rover.Status.ObstacleCoordinates);
+            Assert.AreEqual(RoverStatus.RoverStatusCode.Fail, rover.Status.StatusCode);
         }
 
         [Test]
@@ -189,11 +189,11 @@ namespace MarsTests
 
         internal class MarsRover
         {
-            internal Point coordinates { get { return Position.coordinates; } }
-            internal CardinalDirection direction { get { return Position.direction; } }
+            internal Point Coordinates { get { return Position.Coordinates; } }
+            internal CardinalDirection Direction { get { return Position.Direction; } }
             private Grid _map;
 
-            public Status Status { get; internal set; }
+            public RoverStatus Status { get; private set; }
             public RoverPosition Position { get; private set; }
             public IObstacleDetector ObstacleDetector { get; internal set; }
 
@@ -202,7 +202,7 @@ namespace MarsTests
                 this.Position = new RoverPosition(startingPoint, startingDirection);
                 this._map = map ?? new Grid();
                 this.ObstacleDetector = obstacleDetector;
-                Status = new Status();
+                Status = new RoverStatus();
             }
 
             internal void Move(char[] moves)
@@ -211,23 +211,24 @@ namespace MarsTests
                 {
                     IRoverCommand command = CommandFactory(commandChar);
 
-                    RoverPosition newPosition = command.CalcNewPosition(this.coordinates, this.direction);
+                    RoverPosition newPosition = command.CalcNewPosition(this.Coordinates, this.Direction);
 
-                    newPosition.coordinates = _map.NormalizeCoordinates(newPosition.coordinates);
+                    var normalizeCoords = _map.NormalizeCoordinates(newPosition.Coordinates);
+                    RoverPosition normalizePosition = new RoverPosition(normalizeCoords, newPosition.Direction);
 
-                    if (ObstacleDetector != null && ObstacleDetector.IsObstacleDetected(newPosition.coordinates))
+                    if (ObstacleDetector != null && ObstacleDetector.IsObstacleDetected(normalizePosition.Coordinates))
                     {
-                        Status status = new Status(Status.Code.Fail)
+                        RoverStatus status = new RoverStatus(RoverStatus.RoverStatusCode.Fail)
                         {
-                            RoverStatus = "obstacle detected",
-                            obstacleCoordinates = newPosition.coordinates
+                            StatusMessage = "obstacle detected",
+                            ObstacleCoordinates = normalizePosition.Coordinates
                         };
 
                         this.Status = status;
                         break; //don't move and report error by changing own status
                     }
 
-                    this.Position = newPosition;
+                    this.Position = normalizePosition;
                 }
             }
 
@@ -257,32 +258,34 @@ namespace MarsTests
             }
         }
 
-        public class Status
+        public class RoverStatus
         {
-            internal string RoverStatus;
-            internal Point obstacleCoordinates;
-            internal Code code;
-            public Status() : this(Code.OK)
-            {
-                RoverStatus = "OK";
-            }
-            public Status(Code code)
-            {
+            public enum RoverStatusCode { Ok, Fail }
 
-                this.code = code;
+            internal string StatusMessage { get; set; }
+            internal Point ObstacleCoordinates { get; set; }
+            internal RoverStatusCode StatusCode { get; set; }
+
+            public RoverStatus() : this(RoverStatusCode.Ok)
+            {
+                StatusMessage = "OK";
             }
-            public enum Code { OK, Fail }
+
+            public RoverStatus(RoverStatusCode code)
+            {
+                this.StatusCode = code;
+            }
         }
 
         internal class RoverPosition
         {
-            internal MarsRover.CardinalDirection direction;
-            internal Point coordinates;
+            internal MarsRover.CardinalDirection Direction { get; private set; }
+            internal Point Coordinates { get; private set; }
 
             public RoverPosition(Point coordinates, MarsRover.CardinalDirection direction)
             {
-                this.coordinates = coordinates;
-                this.direction = direction;
+                this.Coordinates = coordinates;
+                this.Direction = direction;
             }
 
             public override bool Equals(Object obj)
@@ -292,12 +295,12 @@ namespace MarsTests
 
             public override int GetHashCode()
             {
-                return Tuple.Create(coordinates, direction).GetHashCode();
+                return Tuple.Create(Coordinates, Direction).GetHashCode();
             }
 
             public static bool operator ==(RoverPosition x, RoverPosition y)
             {
-                return x.coordinates == y.coordinates && x.direction == y.direction;
+                return x.Coordinates == y.Coordinates && x.Direction == y.Direction;
             }
 
             public static bool operator !=(RoverPosition x, RoverPosition y)
@@ -357,6 +360,7 @@ namespace MarsTests
                 return new RoverPosition(newCoordinates, direction);
             }
         }
+
         internal class MoveBackwardCommand : MoveCommand
         {
             public override RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction)
@@ -374,7 +378,7 @@ namespace MarsTests
             public RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction)
             {
                 var newDirectaion = CalcNewDirection(direction);
-                return new RoverPosition(coordinates, newDirectaion);
+                return new RoverPosition(coordinates, newDirectaion); //rover only turns
             }
             protected abstract MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction);
         }
@@ -385,11 +389,11 @@ namespace MarsTests
 
             protected Vector CalcNextMove(Point coordinates, MarsRover.CardinalDirection newDirectaion)
             {
-                Vector newCoordinates = CardinlDirectionToMoveDictionary[newDirectaion];
+                Vector newCoordinates = CardinalDirectionToMoveDictionary[newDirectaion];
                 return newCoordinates;
             }
 
-            protected static ReadOnlyDictionary<MarsRover.CardinalDirection, Vector> CardinlDirectionToMoveDictionary = new ReadOnlyDictionary<MarsRover.CardinalDirection, Vector>(new Dictionary<MarsRover.CardinalDirection, Vector>
+            protected static ReadOnlyDictionary<MarsRover.CardinalDirection, Vector> CardinalDirectionToMoveDictionary = new ReadOnlyDictionary<MarsRover.CardinalDirection, Vector>(new Dictionary<MarsRover.CardinalDirection, Vector>
             {
                 { MarsRover.CardinalDirection.North,    new Vector(0, 1)    },
                 { MarsRover.CardinalDirection.East,     new Vector(1, 0)    },
@@ -406,7 +410,6 @@ namespace MarsTests
 
     internal class Grid
     {
-
         const int WIDTH = 10;
         const int HEIGHT = 10;
 
