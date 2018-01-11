@@ -33,6 +33,26 @@ namespace MarsTests
         }
 
         [Test]
+        public void MoveOneStepBacward_b_00()
+        {
+            //Arrange
+            Point startingPoint = new Point(0, 1);
+            MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
+            MarsRover rover = new MarsRover(startingPoint, startingDirection);
+            var moves = new[] { 'b' };
+
+            Point expectedCoordinates = new Point(0, 0);
+            MarsRover.CardinalDirection expectedStartingDirection = MarsRover.CardinalDirection.North;
+
+            //Act
+            var roverAtNewCoordinates = rover.Move(moves);
+
+            //Assert
+            Assert.AreEqual(expectedCoordinates, roverAtNewCoordinates.coordinates);
+            Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);
+        }
+
+        [Test]
         public void TurnRight_00N_00E()
         {
             //Arrange
@@ -273,47 +293,22 @@ namespace MarsTests
         {
             public override RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction)
             {
-                var newDirectaion = CalcNewDirection(direction);
-                Vector move = CalcNextMove(coordinates, newDirectaion);
+                Vector move = CalcNextMove(coordinates, direction);
 
                 var newCoordinates = Point.Add(coordinates, move);
 
-                return new RoverPosition(newCoordinates, newDirectaion);
-            }
-
-            protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
-            {
-                MarsRover.CardinalDirection newDirection = direction; //walking forward, direction has not changed
-                return newDirection;
+                return new RoverPosition(newCoordinates, direction);
             }
         }
         internal class MoveBackwardCommand : MoveCommand
         {
             public override RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction)
             {
-                var newDirectaion = CalcNewDirection(direction);
-                Vector move = CalcNextMove(coordinates, newDirectaion);
+                Vector move = CalcNextMove(coordinates, direction);
 
-                var newCoordinates = Point.Add(coordinates, move);
+                var newCoordinates = Point.Subtract(coordinates, move); //we subtract the 'move' cause we are going backward
 
-                return new RoverPosition(newCoordinates, newDirectaion);
-            }
-
-            protected override MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction)
-            {
-                switch (direction)
-                {
-                    case MarsRover.CardinalDirection.East:
-                        return MarsRover.CardinalDirection.West;
-                    case MarsRover.CardinalDirection.South:
-                        return MarsRover.CardinalDirection.North;
-                    case MarsRover.CardinalDirection.West:
-                        return MarsRover.CardinalDirection.East;
-                    case MarsRover.CardinalDirection.North:
-                        return MarsRover.CardinalDirection.South;
-                    default:
-                        throw new ArgumentOutOfRangeException($"enum member '{direction}' does not have a corresponding switch case");
-                }
+                return new RoverPosition(newCoordinates, direction);
             }
         }
 
@@ -330,7 +325,6 @@ namespace MarsTests
         internal abstract class MoveCommand : IRoverCommand
         {
             public abstract RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction);
-            protected abstract MarsRover.CardinalDirection CalcNewDirection(MarsRover.CardinalDirection direction);
 
             protected Vector CalcNextMove(Point coordinates, MarsRover.CardinalDirection newDirectaion)
             {
