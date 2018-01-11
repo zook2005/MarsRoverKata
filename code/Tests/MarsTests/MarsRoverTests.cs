@@ -100,10 +100,14 @@ namespace MarsTests
         public void CrossingOverEdgeOfGrid_0MaxYf_00()
         {
             //Arrange
-            const int MaxY = 9; //so grid's height is 10 squares
-            Point startingPoint = new Point(0, MaxY); //(0,9)
+            const int width = 10;
+            const int height = 10;
+
+            Point startingPoint = new Point(0, width - 1); //(0,9)
             MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
-            MarsRover rover = new MarsRover(startingPoint, startingDirection);
+
+            Grid map = new Grid(width, height);
+            MarsRover rover = new MarsRover(startingPoint, startingDirection, map, null);
             var moves = new[] { 'f' };
 
             Point expectedCoordinates = new Point(0, 0); //crossing the grid leads to Y coordinate 0
@@ -125,7 +129,7 @@ namespace MarsTests
             var obstacles = new List<Point>() { obstacleCoords };
             MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
             var ObstacleDetector = new ObstacleDetector(obstacles);
-            MarsRover rover = new MarsRover(startingPoint, startingDirection, ObstacleDetector);
+            MarsRover rover = new MarsRover(startingPoint, startingDirection, null, ObstacleDetector);
 
             var moves = new[] { 'f' };
 
@@ -166,25 +170,40 @@ namespace MarsTests
             Assert.IsTrue(obstacleDetected, $"failed to identify obstacle at coordinates: {obstacleCoords}");
         }
 
+        [Test]
+        public void NormalizeCoordinatesTest()
+        {
+            //Arrange
+            const int width = 10;
+            const int height = 10;
+
+            Grid map = new Grid(width, height);
+            Point expectedCoordinates = new Point(0, 1);
+
+            //Act
+            Point normalizedCoords = map.NormalizeCoordinates(new Point(width, height + 1));
+
+            //Assert
+            Assert.AreEqual(expectedCoordinates, normalizedCoords);
+        }
+
         internal class MarsRover
         {
-            const int MAXX = 9;
-            const int MAXY = 9;
+            const int WIDTH = 10;
+            const int Height = 11;
 
             internal Point coordinates { get { return Position.coordinates; } }
             internal CardinalDirection direction { get { return Position.direction; } }
-            private int maxY;
-            private int maxX;
+            private Grid _map;
 
             public Status Status { get; internal set; }
             public RoverPosition Position { get; private set; }
             public IObstacleDetector ObstacleDetector { get; internal set; }
 
-            public MarsRover(Point startingPoint, CardinalDirection startingDirection, IObstacleDetector obstacleDetector = null, int maxX = MAXX, int maxY = MAXY)
+            public MarsRover(Point startingPoint, CardinalDirection startingDirection, Grid map = null, IObstacleDetector obstacleDetector = null)
             {
-                this.maxX = maxX;
-                this.maxY = maxY;
                 this.Position = new RoverPosition(startingPoint, startingDirection);
+                this._map = map ?? new Grid(WIDTH, Height);
                 this.ObstacleDetector = obstacleDetector;
                 Status = new Status();
             }
@@ -193,15 +212,11 @@ namespace MarsTests
             {
                 foreach (char commandChar in moves)
                 {
-                    Point coordinates = this.coordinates;
-                    CardinalDirection direction = this.direction;
-
                     IRoverCommand command = CommandFactory(commandChar);
 
-                    RoverPosition newPosition = command.CalcNewPosition(coordinates, direction);
+                    RoverPosition newPosition = command.CalcNewPosition(this.coordinates, this.direction);
 
-                    newPosition.coordinates.X = newPosition.coordinates.X % (maxX + 1); // we use modulo to stay in the grid. the grid's size is maxX+1
-                    newPosition.coordinates.Y = newPosition.coordinates.Y % (maxY + 1); // we use modulo to stay in the grid. the grid's size is maxY+1
+                    newPosition.coordinates = _map.NormalizeCoordinates(newPosition.coordinates);
 
                     if (ObstacleDetector != null && ObstacleDetector.IsObstacleDetected(newPosition.coordinates))
                     {
@@ -389,6 +404,29 @@ namespace MarsTests
         internal interface IRoverCommand
         {
             RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction);
+        }
+    }
+
+    internal class Grid
+    {
+        private int _width;
+        private int _height;
+
+        public Grid(int width, int height)
+        {
+            this._width = width;
+            this._height = height;
+        }
+
+        internal Point NormalizeCoordinates(Point coords)
+        {
+            var normalizedCoords = new Point();
+
+            // we use modulo to stay in the grid
+            normalizedCoords.X = coords.X % (_width);
+            normalizedCoords.Y = coords.Y % (_height);
+
+            return normalizedCoords;
         }
     }
 
