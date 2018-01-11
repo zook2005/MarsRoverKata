@@ -2,7 +2,7 @@
 
 namespace Mars
 {
-    internal interface IObstacleDetector
+    public interface IObstacleDetector
     {
         bool IsObstacleDetected(Point obstacleCoords);
     }

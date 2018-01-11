@@ -2,7 +2,7 @@
 
 namespace Mars
 {
-    internal class Grid
+    public class Grid
     {
         const int WIDTH = 10;
         const int HEIGHT = 10;

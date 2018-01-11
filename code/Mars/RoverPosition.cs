@@ -3,7 +3,7 @@ using System.Windows;
 
 namespace Mars
 {
-    internal class RoverPosition
+    public class RoverPosition
     {
         internal MarsRover.CardinalDirection Direction { get; private set; }
         internal Point Coordinates { get; private set; }

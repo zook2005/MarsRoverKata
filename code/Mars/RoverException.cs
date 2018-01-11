@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Mars
 {
     [Serializable]
-    internal class RoverException : Exception
+    public class RoverException : Exception
     {
         public RoverException()
         {

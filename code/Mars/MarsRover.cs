@@ -2,7 +2,7 @@
 
 namespace Mars
 {
-    internal class MarsRover
+    public class MarsRover
     {
         internal Point Coordinates { get { return Position.Coordinates; } }
         internal CardinalDirection Direction { get { return Position.Direction; } }
@@ -10,7 +10,7 @@ namespace Mars
 
         public RoverStatus Status { get; private set; }
         public RoverPosition Position { get; private set; }
-        public IObstacleDetector ObstacleDetector { get; private set; }
+        internal IObstacleDetector ObstacleDetector { get; private set; }
 
         public MarsRover(Point startingPoint, CardinalDirection startingDirection, Grid map = null, IObstacleDetector obstacleDetector = null)
         {
@@ -60,7 +60,7 @@ namespace Mars
             }
         }
 
-        internal enum CardinalDirection
+        public enum CardinalDirection
         {
             North,
             East,
