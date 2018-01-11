@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using System.Collections.Generic;
 using System.Windows;
+using Mars;
 
 namespace MarsTests
 {

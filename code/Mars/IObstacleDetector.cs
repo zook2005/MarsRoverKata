@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace MarsTests
+namespace Mars
 {
     internal interface IObstacleDetector
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 
-namespace MarsTests
+namespace Mars
 {
     internal class RoverPosition
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 
-namespace MarsTests
+namespace Mars
 {
     internal class ObstacleDetector : IObstacleDetector
     {

@@ -1,4 +1,4 @@
-﻿namespace MarsTests
+﻿namespace Mars
 {
     public class RoverStatus
     {
