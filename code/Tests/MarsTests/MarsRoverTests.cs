@@ -127,7 +127,6 @@ namespace MarsTests
             var ObstacleDetector = new ObstacleDetector(obstacles);
             MarsRover rover = new MarsRover(startingPoint, startingDirection, ObstacleDetector);
 
-
             var moves = new[] { 'f' };
 
             Point expectedCoordinates = startingPoint;
@@ -192,12 +191,13 @@ namespace MarsTests
 
             internal void Move(char[] moves)
             {
-                Point coordinates = this.coordinates;
-                CardinalDirection direction = this.direction;
-
                 foreach (char commandChar in moves)
                 {
+                    Point coordinates = this.coordinates;
+                    CardinalDirection direction = this.direction;
+
                     IRoverCommand command = CommandFactory(commandChar);
+
                     RoverPosition newPosition = command.CalcNewPosition(coordinates, direction);
 
                     newPosition.coordinates.X = newPosition.coordinates.X % (maxX + 1); // we use modulo to stay in the grid. the grid's size is maxX+1
@@ -212,13 +212,11 @@ namespace MarsTests
                         };
 
                         this.Status = status;
-                        break;
+                        break; //don't move and report error by changing own status
                     }
 
-                    direction = newPosition.direction;
-                    coordinates = newPosition.coordinates;
+                    this.Position = newPosition;
                 }
-                this.Position = new RoverPosition(coordinates, direction);
             }
 
             internal enum CardinalDirection
