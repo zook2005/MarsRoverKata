@@ -94,8 +94,15 @@ namespace MarsTests
             Assert.AreEqual(expectedStartingDirection, roverAtNewCoordinates.direction);//rover did not move
             Assert.AreEqual("obstacle detected", roverAtNewCoordinates.Status.RoverStatus);
             Assert.AreEqual(obstacleCoords, roverAtNewCoordinates.Status.obstacleCoordinates);
+        }
 
-
+        [Test]
+        public void TestRoverStateEquality()
+        {
+            var state1 = new RoverState(new Point(1, 1), MarsRover.CardinalDirection.East);
+            var state2 = new RoverState(new Point(1, 1), MarsRover.CardinalDirection.East);
+            Assert.IsTrue(state1.GetHashCode().Equals(state2.GetHashCode()));
+            Assert.IsTrue(state1.Equals(state2));
         }
 
         internal class MarsRover
@@ -191,6 +198,26 @@ namespace MarsTests
             {
                 this.coordinates = coordinates;
                 this.direction = direction;
+            }
+
+            public override bool Equals(Object obj)
+            {
+                return obj is RoverState && this == (RoverState)obj;
+            }
+
+            public override int GetHashCode()
+            {
+                return Tuple.Create(coordinates, direction).GetHashCode();
+            }
+
+            public static bool operator ==(RoverState x, RoverState y)
+            {
+                return x.coordinates == y.coordinates && x.direction == y.direction;
+            }
+
+            public static bool operator !=(RoverState x, RoverState y)
+            {
+                return !(x == y);
             }
 
             public static ReadOnlyDictionary<MarsRover.CardinalDirection, Vector> CardinlDirectionToMoveDictionary = new ReadOnlyDictionary<MarsRover.CardinalDirection, Vector>(new Dictionary<MarsRover.CardinalDirection, Vector>
