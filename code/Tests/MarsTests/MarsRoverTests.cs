@@ -73,7 +73,6 @@ namespace MarsTests
             Assert.AreEqual(expectedCoordinates, rover.coordinates);
             Assert.AreEqual(expectedStartingDirection, rover.direction);
             Assert.AreEqual(Status.Code.OK, rover.Status.code);
-
         }
 
         [Test]
@@ -115,7 +114,6 @@ namespace MarsTests
             //Assert
             Assert.AreEqual(expectedCoordinates, rover.coordinates);
             Assert.AreEqual(Status.Code.OK, rover.Status.code);
-
         }
 
         [Test]
@@ -123,15 +121,17 @@ namespace MarsTests
         {
             //Arrange
             Point startingPoint = new Point(0, 0);
+            var obstacleCoords = new Point(0, 1);
+            var obstacles = new List<Point>() { obstacleCoords };
             MarsRover.CardinalDirection startingDirection = MarsRover.CardinalDirection.North;
-            MarsRover rover = new MarsRover(startingPoint, startingDirection);
+            var ObstacleDetector = new ObstacleDetector(obstacles);
+            MarsRover rover = new MarsRover(startingPoint, startingDirection, ObstacleDetector);
+
+
             var moves = new[] { 'f' };
 
             Point expectedCoordinates = startingPoint;
             MarsRover.CardinalDirection expectedStartingDirection = startingDirection;
-
-            var obstacleCoords = new Point(0, 1);
-            rover.obstacles = new List<Point>() { obstacleCoords };
 
             //Act
             rover.Move(moves);
@@ -153,6 +153,20 @@ namespace MarsTests
             Assert.IsTrue(position1.Equals(position2));
         }
 
+        [Test]
+        public void DetectObstacleTest()
+        {
+            //Arrange
+            var obstacleCoords = new Point(0, 1);
+            IObstacleDetector obstacleDetector = new ObstacleDetector(new List<Point>() { obstacleCoords });
+
+            //Act
+            var obstacleDetected = obstacleDetector.IsObstacleDetected(obstacleCoords);
+
+            //Assert
+            Assert.IsTrue(obstacleDetected, $"failed to identify obstacle at coordinates: {obstacleCoords}");
+        }
+
         internal class MarsRover
         {
             const int MAXX = 9;
@@ -162,16 +176,17 @@ namespace MarsTests
             internal CardinalDirection direction { get { return Position.direction; } }
             private int maxY;
             private int maxX;
-            internal List<Point> obstacles = new List<Point>();
 
             public Status Status { get; internal set; }
             public RoverPosition Position { get; private set; }
+            public IObstacleDetector ObstacleDetector { get; internal set; }
 
-            public MarsRover(Point startingPoint, CardinalDirection startingDirection, int maxX = MAXX, int maxY = MAXY)
+            public MarsRover(Point startingPoint, CardinalDirection startingDirection, IObstacleDetector obstacleDetector = null, int maxX = MAXX, int maxY = MAXY)
             {
                 this.maxX = maxX;
                 this.maxY = maxY;
                 this.Position = new RoverPosition(startingPoint, startingDirection);
+                this.ObstacleDetector = obstacleDetector;
                 Status = new Status();
             }
 
@@ -188,7 +203,7 @@ namespace MarsTests
                     newPosition.coordinates.X = newPosition.coordinates.X % (maxX + 1); // we use modulo to stay in the grid. the grid's size is maxX+1
                     newPosition.coordinates.Y = newPosition.coordinates.Y % (maxY + 1); // we use modulo to stay in the grid. the grid's size is maxY+1
 
-                    if (obstacles.Contains(newPosition.coordinates))
+                    if (ObstacleDetector != null && ObstacleDetector.IsObstacleDetected(newPosition.coordinates))
                     {
                         Status status = new Status(Status.Code.Fail)
                         {
@@ -377,5 +392,25 @@ namespace MarsTests
         {
             RoverPosition CalcNewPosition(Point coordinates, MarsRover.CardinalDirection direction);
         }
+    }
+
+    internal class ObstacleDetector : IObstacleDetector
+    {
+        private List<Point> _obstacleList;
+
+        public ObstacleDetector(List<Point> obstacleList)
+        {
+            this._obstacleList = obstacleList ?? new List<Point>();
+        }
+
+        public bool IsObstacleDetected(Point obstacleCoords)
+        {
+            return _obstacleList.Contains(obstacleCoords);
+        }
+    }
+
+    internal interface IObstacleDetector
+    {
+        bool IsObstacleDetected(Point obstacleCoords);
     }
 }
